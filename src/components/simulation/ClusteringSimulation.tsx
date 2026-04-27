@@ -188,6 +188,84 @@ const runDivisive = () => {
 
 type Mode = "agglo" | "divisive";
 
+// Petit badge avec l'initiale, coloré selon le cluster courant
+const MemberBadge = ({ id, colorIdx }: { id: string; colorIdx: number }) => {
+  const p = PEOPLE.find((x) => x.id === id)!;
+  const color = CLUSTER_COLORS[colorIdx % CLUSTER_COLORS.length];
+  return (
+    <span
+      className={`inline-flex items-center justify-center w-5 h-5 rounded-full bg-${color} text-paper text-[10px] font-semibold mr-1`}
+      title={p.name}
+    >
+      {p.initial}
+    </span>
+  );
+};
+
+// Construit les coordonnées du dendrogramme à partir de l'historique agglomératif.
+// Pour le mode divisif, on inverse l'historique pour obtenir les mêmes fusions.
+const buildDendrogram = (
+  aggloHistory: { clusters: Cluster[]; merge: MergeEvent | null }[],
+  visibleStep: number,
+  mode: Mode,
+  divisiveHistory: { clusters: Cluster[]; merge: MergeEvent | null }[],
+) => {
+  const totalSteps = aggloHistory.length - 1; // = nombre de fusions
+  // Combien de fusions sont "révélées" à cette étape ?
+  let revealed: number;
+  if (mode === "agglo") {
+    revealed = visibleStep;
+  } else {
+    // En divisif, l'étape 0 = tout fusionné (tout révélé), étape finale = rien révélé
+    const divSteps = divisiveHistory.length - 1;
+    revealed = totalSteps - Math.round((visibleStep / divSteps) * totalSteps);
+  }
+
+  const xOf = (id: string) => LEAF_ORDER.indexOf(id) * 38 + 30;
+  const baseY = 240;
+  const maxDist = Math.max(
+    ...aggloHistory.slice(1).map((h) => h.merge!.distance),
+    1,
+  );
+
+  // pos[clusterKey] = { x, y } — clusterKey = membres triés joints
+  const keyOf = (members: string[]) => [...members].sort().join(",");
+  const pos: Record<string, { x: number; y: number }> = {};
+  PEOPLE.forEach((p) => (pos[keyOf([p.id])] = { x: xOf(p.id), y: baseY }));
+
+  const links: {
+    x1: number;
+    x2: number;
+    y1: number;
+    y2: number;
+    yTop: number;
+    isLast: boolean;
+  }[] = [];
+
+  for (let i = 1; i <= totalSteps; i++) {
+    const ev = aggloHistory[i].merge!;
+    const ka = keyOf(ev.a.members);
+    const kb = keyOf(ev.b.members);
+    const pa = pos[ka];
+    const pb = pos[kb];
+    if (!pa || !pb) continue;
+    const yTop = baseY - 20 - (ev.distance / maxDist) * 190;
+    const isVisible = i <= revealed;
+    if (isVisible) {
+      links.push({
+        x1: pa.x,
+        x2: pb.x,
+        y1: pa.y,
+        y2: pb.y,
+        yTop,
+        isLast: i === revealed,
+      });
+    }
+    pos[keyOf([...ev.a.members, ...ev.b.members])] = { x: (pa.x + pb.x) / 2, y: yTop };
+  }
+  return { links, xOf, baseY };
+};
+
 export const ClusteringSimulation = () => {
   const [mode, setMode] = useState<Mode>("agglo");
   const aggloHistory = useMemo(() => runAgglomerative(), []);
@@ -208,6 +286,11 @@ export const ClusteringSimulation = () => {
 
   const animalCluster: Record<string, number> = {};
   current.clusters.forEach((c, i) => c.members.forEach((m) => (animalCluster[m] = i)));
+
+  const dendro = useMemo(
+    () => buildDendrogram(aggloHistory, step, mode, divisiveHistory),
+    [aggloHistory, divisiveHistory, step, mode],
+  );
 
   return (
     <div className="min-h-screen bg-background text-ink">
