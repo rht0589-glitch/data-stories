@@ -20,24 +20,27 @@ import { RotateCcw, ArrowRight, Sparkles, Target, ArrowUp, ArrowDown, Info } fro
 type Person = {
   id: string;
   name: string;
-  emoji: string;
+  initial: string;
   sport: number;   // heures / semaine
   social: number;  // heures / jour
   stress: number;  // 1-10
 };
 
 const PEOPLE: Person[] = [
-  { id: "alice",   name: "Alice",   emoji: "🧘‍♀️", sport: 8, social: 2, stress: 3 },
-  { id: "bob",     name: "Bob",     emoji: "💻",  sport: 2, social: 6, stress: 8 },
-  { id: "charlie", name: "Charlie", emoji: "🙂",  sport: 5, social: 3, stress: 5 },
-  { id: "diana",   name: "Diana",   emoji: "🏃‍♀️", sport: 7, social: 1, stress: 2 },
-  { id: "eve",     name: "Eve",     emoji: "📱",  sport: 1, social: 8, stress: 9 },
-  { id: "frank",   name: "Frank",   emoji: "🚴",  sport: 6, social: 2, stress: 4 },
-  { id: "grace",   name: "Grace",   emoji: "😟",  sport: 3, social: 7, stress: 7 },
-  { id: "henry",   name: "Henry",   emoji: "🏋️", sport: 9, social: 1, stress: 1 },
-  { id: "iris",    name: "Iris",    emoji: "😐",  sport: 4, social: 5, stress: 6 },
-  { id: "jack",    name: "Jack",    emoji: "😩",  sport: 2, social: 9, stress: 9 },
+  { id: "alice",   name: "Alice",   initial: "A", sport: 8, social: 2, stress: 3 },
+  { id: "bob",     name: "Bob",     initial: "B", sport: 2, social: 6, stress: 8 },
+  { id: "charlie", name: "Charlie", initial: "C", sport: 5, social: 3, stress: 5 },
+  { id: "diana",   name: "Diana",   initial: "D", sport: 7, social: 1, stress: 2 },
+  { id: "eve",     name: "Eve",     initial: "E", sport: 1, social: 8, stress: 9 },
+  { id: "frank",   name: "Frank",   initial: "F", sport: 6, social: 2, stress: 4 },
+  { id: "grace",   name: "Grace",   initial: "G", sport: 3, social: 7, stress: 7 },
+  { id: "henry",   name: "Henry",   initial: "H", sport: 9, social: 1, stress: 1 },
+  { id: "iris",    name: "Iris",    initial: "I", sport: 4, social: 5, stress: 6 },
+  { id: "jack",    name: "Jack",    initial: "J", sport: 2, social: 9, stress: 9 },
 ];
+
+// Ordre des feuilles dans le dendrogramme (groupé par profil naturel pour éviter les croisements)
+const LEAF_ORDER = ["henry", "diana", "alice", "frank", "charlie", "iris", "grace", "bob", "eve", "jack"];
 
 const CLUSTER_COLORS = [
   "cluster-a", "cluster-b", "cluster-c", "cluster-d",
