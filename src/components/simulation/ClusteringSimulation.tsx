@@ -354,11 +354,18 @@ export const ClusteringSimulation = () => {
                   const color = CLUSTER_COLORS[ci % CLUSTER_COLORS.length];
                   return (
                     <g key={p.id} className="transition-all duration-500">
-                      <circle cx={x} cy={y} r="6" className={`fill-${color}`} />
-                      <text x={x} y={y - 11} textAnchor="middle" fontSize="13">
-                        {p.emoji}
+                      <circle cx={x} cy={y} r="11" className={`fill-${color}`} />
+                      <text
+                        x={x}
+                        y={y + 3.5}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fontWeight="600"
+                        className="fill-paper"
+                      >
+                        {p.initial}
                       </text>
-                      <text x={x} y={y + 18} textAnchor="middle" fontSize="8" className="fill-ink-soft">
+                      <text x={x} y={y + 22} textAnchor="middle" fontSize="8" className="fill-ink-soft">
                         {p.name}
                       </text>
                     </g>
