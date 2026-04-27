@@ -404,13 +404,13 @@ export const ClusteringSimulation = () => {
                   Fusion de{" "}
                   <span className="text-ink">
                     {lastEvent.a.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
+                      .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
                       .join(" ")}
                   </span>{" "}
                   avec{" "}
                   <span className="text-ink">
                     {lastEvent.b.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
+                      .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
                       .join(" ")}
                   </span>{" "}
                   — distance{" "}
@@ -427,13 +427,13 @@ export const ClusteringSimulation = () => {
                   Séparation : d'un côté{" "}
                   <span className="text-ink">
                     {lastEvent.a.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
+                      .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
                       .join(" ")}
                   </span>
                   , de l'autre{" "}
                   <span className="text-ink">
                     {lastEvent.b.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
+                      .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
                       .join(" ")}
                   </span>
                 </div>
@@ -542,7 +542,7 @@ export const ClusteringSimulation = () => {
                       <div className={`w-2.5 h-2.5 rounded-full bg-${color}`} />
                       <div className="text-base">
                         {c.members
-                          .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
+                          .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
                           .join(" ")}
                       </div>
                       <div className="ml-auto text-[10px] tracking-wider uppercase text-ink-soft">
