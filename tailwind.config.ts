@@ -3,6 +3,10 @@ import type { Config } from "tailwindcss";
 export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  safelist: [
+    "fill-cluster-a", "fill-cluster-b", "fill-cluster-c", "fill-cluster-d", "fill-highlight", "fill-ink-soft", "fill-ink",
+    "stroke-cluster-a", "stroke-cluster-b", "stroke-cluster-c", "stroke-cluster-d", "stroke-highlight",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -47,6 +51,15 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        ink: "hsl(var(--ink))",
+        "ink-soft": "hsl(var(--ink-soft))",
+        paper: "hsl(var(--paper))",
+        line: "hsl(var(--line))",
+        highlight: "hsl(var(--highlight))",
+        "cluster-a": "hsl(var(--cluster-a))",
+        "cluster-b": "hsl(var(--cluster-b))",
+        "cluster-c": "hsl(var(--cluster-c))",
+        "cluster-d": "hsl(var(--cluster-d))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
