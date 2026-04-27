@@ -615,10 +615,10 @@ export const ClusteringSimulation = () => {
                       className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary border border-line"
                     >
                       <div className={`w-2.5 h-2.5 rounded-full bg-${color}`} />
-                      <div className="text-base">
-                        {c.members
-                          .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
-                          .join(" ")}
+                      <div className="flex flex-wrap">
+                        {c.members.map((m) => (
+                          <MemberBadge key={m} id={m} colorIdx={ci} />
+                        ))}
                       </div>
                       <div className="ml-auto text-[10px] tracking-wider uppercase text-ink-soft">
                         {c.members.length} membre{c.members.length !== 1 ? "s" : ""}
@@ -629,6 +629,89 @@ export const ClusteringSimulation = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Dendrogramme */}
+        <div className="mt-6 p-5 md:p-6 rounded-2xl bg-card border border-line shadow-soft">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-[11px] tracking-[0.2em] uppercase text-ink-soft">
+                L'arbre hiérarchique
+              </div>
+              <div className="font-serif text-lg">Dendrogramme</div>
+            </div>
+            <div className="text-xs text-ink-soft hidden sm:block">
+              hauteur = distance entre groupes fusionnés
+            </div>
+          </div>
+          <div className="bg-paper rounded-xl border border-line overflow-hidden p-4">
+            <svg viewBox="0 0 410 280" className="w-full h-auto">
+              {/* baseline */}
+              <line
+                x1="20"
+                y1={dendro.baseY}
+                x2="400"
+                y2={dendro.baseY}
+                stroke="hsl(var(--line))"
+                strokeWidth="1"
+              />
+
+              {/* links */}
+              {dendro.links.map((l, i) => (
+                <path
+                  key={i}
+                  d={`M ${l.x1} ${l.y1} L ${l.x1} ${l.yTop} L ${l.x2} ${l.yTop} L ${l.x2} ${l.y2}`}
+                  fill="none"
+                  stroke={l.isLast ? "hsl(var(--highlight))" : "hsl(var(--ink))"}
+                  strokeWidth={l.isLast ? 2 : 1.2}
+                  strokeOpacity={l.isLast ? 1 : 0.55}
+                  className="transition-all duration-500"
+                />
+              ))}
+
+              {/* leaves */}
+              {LEAF_ORDER.map((id) => {
+                const p = PEOPLE.find((x) => x.id === id)!;
+                const x = dendro.xOf(id);
+                const ci = animalCluster[id];
+                const color = CLUSTER_COLORS[ci % CLUSTER_COLORS.length];
+                return (
+                  <g key={id}>
+                    <circle
+                      cx={x}
+                      cy={dendro.baseY}
+                      r="9"
+                      className={`fill-${color} transition-all duration-500`}
+                    />
+                    <text
+                      x={x}
+                      y={dendro.baseY + 3.5}
+                      textAnchor="middle"
+                      fontSize="9"
+                      fontWeight="600"
+                      className="fill-paper"
+                    >
+                      {p.initial}
+                    </text>
+                    <text
+                      x={x}
+                      y={dendro.baseY + 24}
+                      textAnchor="middle"
+                      fontSize="8"
+                      className="fill-ink-soft"
+                    >
+                      {p.name}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+          <p className="mt-3 text-xs text-ink-soft leading-relaxed max-w-2xl">
+            Chaque barre horizontale représente une fusion. Plus la barre est <span className="text-ink">haute</span>,
+            plus les deux groupes étaient <span className="text-ink">différents</span> au moment où on les a réunis.
+            En coupant l'arbre à une certaine hauteur, on choisit le nombre de groupes finaux.
+          </p>
         </div>
 
         {/* Method explanation */}
