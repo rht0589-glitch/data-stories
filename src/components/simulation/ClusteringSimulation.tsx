@@ -20,24 +20,27 @@ import { RotateCcw, ArrowRight, Sparkles, Target, ArrowUp, ArrowDown, Info } fro
 type Person = {
   id: string;
   name: string;
-  emoji: string;
+  initial: string;
   sport: number;   // heures / semaine
   social: number;  // heures / jour
   stress: number;  // 1-10
 };
 
 const PEOPLE: Person[] = [
-  { id: "alice",   name: "Alice",   emoji: "🧘‍♀️", sport: 8, social: 2, stress: 3 },
-  { id: "bob",     name: "Bob",     emoji: "💻",  sport: 2, social: 6, stress: 8 },
-  { id: "charlie", name: "Charlie", emoji: "🙂",  sport: 5, social: 3, stress: 5 },
-  { id: "diana",   name: "Diana",   emoji: "🏃‍♀️", sport: 7, social: 1, stress: 2 },
-  { id: "eve",     name: "Eve",     emoji: "📱",  sport: 1, social: 8, stress: 9 },
-  { id: "frank",   name: "Frank",   emoji: "🚴",  sport: 6, social: 2, stress: 4 },
-  { id: "grace",   name: "Grace",   emoji: "😟",  sport: 3, social: 7, stress: 7 },
-  { id: "henry",   name: "Henry",   emoji: "🏋️", sport: 9, social: 1, stress: 1 },
-  { id: "iris",    name: "Iris",    emoji: "😐",  sport: 4, social: 5, stress: 6 },
-  { id: "jack",    name: "Jack",    emoji: "😩",  sport: 2, social: 9, stress: 9 },
+  { id: "alice",   name: "Alice",   initial: "A", sport: 8, social: 2, stress: 3 },
+  { id: "bob",     name: "Bob",     initial: "B", sport: 2, social: 6, stress: 8 },
+  { id: "charlie", name: "Charlie", initial: "C", sport: 5, social: 3, stress: 5 },
+  { id: "diana",   name: "Diana",   initial: "D", sport: 7, social: 1, stress: 2 },
+  { id: "eve",     name: "Eve",     initial: "E", sport: 1, social: 8, stress: 9 },
+  { id: "frank",   name: "Frank",   initial: "F", sport: 6, social: 2, stress: 4 },
+  { id: "grace",   name: "Grace",   initial: "G", sport: 3, social: 7, stress: 7 },
+  { id: "henry",   name: "Henry",   initial: "H", sport: 9, social: 1, stress: 1 },
+  { id: "iris",    name: "Iris",    initial: "I", sport: 4, social: 5, stress: 6 },
+  { id: "jack",    name: "Jack",    initial: "J", sport: 2, social: 9, stress: 9 },
 ];
+
+// Ordre des feuilles dans le dendrogramme (groupé par profil naturel pour éviter les croisements)
+const LEAF_ORDER = ["henry", "diana", "alice", "frank", "charlie", "iris", "grace", "bob", "eve", "jack"];
 
 const CLUSTER_COLORS = [
   "cluster-a", "cluster-b", "cluster-c", "cluster-d",
@@ -185,6 +188,84 @@ const runDivisive = () => {
 
 type Mode = "agglo" | "divisive";
 
+// Petit badge avec l'initiale, coloré selon le cluster courant
+const MemberBadge = ({ id, colorIdx }: { id: string; colorIdx: number }) => {
+  const p = PEOPLE.find((x) => x.id === id)!;
+  const color = CLUSTER_COLORS[colorIdx % CLUSTER_COLORS.length];
+  return (
+    <span
+      className={`inline-flex items-center justify-center w-5 h-5 rounded-full bg-${color} text-paper text-[10px] font-semibold mr-1`}
+      title={p.name}
+    >
+      {p.initial}
+    </span>
+  );
+};
+
+// Construit les coordonnées du dendrogramme à partir de l'historique agglomératif.
+// Pour le mode divisif, on inverse l'historique pour obtenir les mêmes fusions.
+const buildDendrogram = (
+  aggloHistory: { clusters: Cluster[]; merge: MergeEvent | null }[],
+  visibleStep: number,
+  mode: Mode,
+  divisiveHistory: { clusters: Cluster[]; merge: MergeEvent | null }[],
+) => {
+  const totalSteps = aggloHistory.length - 1; // = nombre de fusions
+  // Combien de fusions sont "révélées" à cette étape ?
+  let revealed: number;
+  if (mode === "agglo") {
+    revealed = visibleStep;
+  } else {
+    // En divisif, l'étape 0 = tout fusionné (tout révélé), étape finale = rien révélé
+    const divSteps = divisiveHistory.length - 1;
+    revealed = totalSteps - Math.round((visibleStep / divSteps) * totalSteps);
+  }
+
+  const xOf = (id: string) => LEAF_ORDER.indexOf(id) * 38 + 30;
+  const baseY = 240;
+  const maxDist = Math.max(
+    ...aggloHistory.slice(1).map((h) => h.merge!.distance),
+    1,
+  );
+
+  // pos[clusterKey] = { x, y } — clusterKey = membres triés joints
+  const keyOf = (members: string[]) => [...members].sort().join(",");
+  const pos: Record<string, { x: number; y: number }> = {};
+  PEOPLE.forEach((p) => (pos[keyOf([p.id])] = { x: xOf(p.id), y: baseY }));
+
+  const links: {
+    x1: number;
+    x2: number;
+    y1: number;
+    y2: number;
+    yTop: number;
+    isLast: boolean;
+  }[] = [];
+
+  for (let i = 1; i <= totalSteps; i++) {
+    const ev = aggloHistory[i].merge!;
+    const ka = keyOf(ev.a.members);
+    const kb = keyOf(ev.b.members);
+    const pa = pos[ka];
+    const pb = pos[kb];
+    if (!pa || !pb) continue;
+    const yTop = baseY - 20 - (ev.distance / maxDist) * 190;
+    const isVisible = i <= revealed;
+    if (isVisible) {
+      links.push({
+        x1: pa.x,
+        x2: pb.x,
+        y1: pa.y,
+        y2: pb.y,
+        yTop,
+        isLast: i === revealed,
+      });
+    }
+    pos[keyOf([...ev.a.members, ...ev.b.members])] = { x: (pa.x + pb.x) / 2, y: yTop };
+  }
+  return { links, xOf, baseY };
+};
+
 export const ClusteringSimulation = () => {
   const [mode, setMode] = useState<Mode>("agglo");
   const aggloHistory = useMemo(() => runAgglomerative(), []);
@@ -205,6 +286,11 @@ export const ClusteringSimulation = () => {
 
   const animalCluster: Record<string, number> = {};
   current.clusters.forEach((c, i) => c.members.forEach((m) => (animalCluster[m] = i)));
+
+  const dendro = useMemo(
+    () => buildDendrogram(aggloHistory, step, mode, divisiveHistory),
+    [aggloHistory, divisiveHistory, step, mode],
+  );
 
   return (
     <div className="min-h-screen bg-background text-ink">
@@ -351,11 +437,18 @@ export const ClusteringSimulation = () => {
                   const color = CLUSTER_COLORS[ci % CLUSTER_COLORS.length];
                   return (
                     <g key={p.id} className="transition-all duration-500">
-                      <circle cx={x} cy={y} r="6" className={`fill-${color}`} />
-                      <text x={x} y={y - 11} textAnchor="middle" fontSize="13">
-                        {p.emoji}
+                      <circle cx={x} cy={y} r="11" className={`fill-${color}`} />
+                      <text
+                        x={x}
+                        y={y + 3.5}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fontWeight="600"
+                        className="fill-paper"
+                      >
+                        {p.initial}
                       </text>
-                      <text x={x} y={y + 18} textAnchor="middle" fontSize="8" className="fill-ink-soft">
+                      <text x={x} y={y + 22} textAnchor="middle" fontSize="8" className="fill-ink-soft">
                         {p.name}
                       </text>
                     </g>
@@ -392,17 +485,13 @@ export const ClusteringSimulation = () => {
                   </span>
                   <span className="mx-2">·</span>
                   Fusion de{" "}
-                  <span className="text-ink">
-                    {lastEvent.a.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
-                      .join(" ")}
-                  </span>{" "}
+                  {lastEvent.a.members.map((m) => (
+                    <MemberBadge key={m} id={m} colorIdx={animalCluster[m]} />
+                  ))}
                   avec{" "}
-                  <span className="text-ink">
-                    {lastEvent.b.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
-                      .join(" ")}
-                  </span>{" "}
+                  {lastEvent.b.members.map((m) => (
+                    <MemberBadge key={m} id={m} colorIdx={animalCluster[m]} />
+                  ))}
                   — distance{" "}
                   <span className="font-mono text-ink">{lastEvent.distance.toFixed(2)}</span>
                 </div>
@@ -415,17 +504,13 @@ export const ClusteringSimulation = () => {
                   </span>
                   <span className="mx-2">·</span>
                   Séparation : d'un côté{" "}
-                  <span className="text-ink">
-                    {lastEvent.a.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
-                      .join(" ")}
-                  </span>
+                  {lastEvent.a.members.map((m) => (
+                    <MemberBadge key={m} id={m} colorIdx={animalCluster[m]} />
+                  ))}
                   , de l'autre{" "}
-                  <span className="text-ink">
-                    {lastEvent.b.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
-                      .join(" ")}
-                  </span>
+                  {lastEvent.b.members.map((m) => (
+                    <MemberBadge key={m} id={m} colorIdx={animalCluster[m]} />
+                  ))}
                 </div>
               )}
             </div>
@@ -530,10 +615,10 @@ export const ClusteringSimulation = () => {
                       className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary border border-line"
                     >
                       <div className={`w-2.5 h-2.5 rounded-full bg-${color}`} />
-                      <div className="text-base">
-                        {c.members
-                          .map((m) => PEOPLE.find((p) => p.id === m)!.emoji)
-                          .join(" ")}
+                      <div className="flex flex-wrap">
+                        {c.members.map((m) => (
+                          <MemberBadge key={m} id={m} colorIdx={ci} />
+                        ))}
                       </div>
                       <div className="ml-auto text-[10px] tracking-wider uppercase text-ink-soft">
                         {c.members.length} membre{c.members.length !== 1 ? "s" : ""}
@@ -544,6 +629,89 @@ export const ClusteringSimulation = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Dendrogramme */}
+        <div className="mt-6 p-5 md:p-6 rounded-2xl bg-card border border-line shadow-soft">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-[11px] tracking-[0.2em] uppercase text-ink-soft">
+                L'arbre hiérarchique
+              </div>
+              <div className="font-serif text-lg">Dendrogramme</div>
+            </div>
+            <div className="text-xs text-ink-soft hidden sm:block">
+              hauteur = distance entre groupes fusionnés
+            </div>
+          </div>
+          <div className="bg-paper rounded-xl border border-line overflow-hidden p-4">
+            <svg viewBox="0 0 410 280" className="w-full h-auto">
+              {/* baseline */}
+              <line
+                x1="20"
+                y1={dendro.baseY}
+                x2="400"
+                y2={dendro.baseY}
+                stroke="hsl(var(--line))"
+                strokeWidth="1"
+              />
+
+              {/* links */}
+              {dendro.links.map((l, i) => (
+                <path
+                  key={i}
+                  d={`M ${l.x1} ${l.y1} L ${l.x1} ${l.yTop} L ${l.x2} ${l.yTop} L ${l.x2} ${l.y2}`}
+                  fill="none"
+                  stroke={l.isLast ? "hsl(var(--highlight))" : "hsl(var(--ink))"}
+                  strokeWidth={l.isLast ? 2 : 1.2}
+                  strokeOpacity={l.isLast ? 1 : 0.55}
+                  className="transition-all duration-500"
+                />
+              ))}
+
+              {/* leaves */}
+              {LEAF_ORDER.map((id) => {
+                const p = PEOPLE.find((x) => x.id === id)!;
+                const x = dendro.xOf(id);
+                const ci = animalCluster[id];
+                const color = CLUSTER_COLORS[ci % CLUSTER_COLORS.length];
+                return (
+                  <g key={id}>
+                    <circle
+                      cx={x}
+                      cy={dendro.baseY}
+                      r="9"
+                      className={`fill-${color} transition-all duration-500`}
+                    />
+                    <text
+                      x={x}
+                      y={dendro.baseY + 3.5}
+                      textAnchor="middle"
+                      fontSize="9"
+                      fontWeight="600"
+                      className="fill-paper"
+                    >
+                      {p.initial}
+                    </text>
+                    <text
+                      x={x}
+                      y={dendro.baseY + 24}
+                      textAnchor="middle"
+                      fontSize="8"
+                      className="fill-ink-soft"
+                    >
+                      {p.name}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+          <p className="mt-3 text-xs text-ink-soft leading-relaxed max-w-2xl">
+            Chaque barre horizontale représente une fusion. Plus la barre est <span className="text-ink">haute</span>,
+            plus les deux groupes étaient <span className="text-ink">différents</span> au moment où on les a réunis.
+            En coupant l'arbre à une certaine hauteur, on choisit le nombre de groupes finaux.
+          </p>
         </div>
 
         {/* Method explanation */}
