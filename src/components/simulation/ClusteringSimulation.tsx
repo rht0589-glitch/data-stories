@@ -485,17 +485,13 @@ export const ClusteringSimulation = () => {
                   </span>
                   <span className="mx-2">·</span>
                   Fusion de{" "}
-                  <span className="text-ink">
-                    {lastEvent.a.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
-                      .join(" ")}
-                  </span>{" "}
+                  {lastEvent.a.members.map((m) => (
+                    <MemberBadge key={m} id={m} colorIdx={animalCluster[m]} />
+                  ))}
                   avec{" "}
-                  <span className="text-ink">
-                    {lastEvent.b.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
-                      .join(" ")}
-                  </span>{" "}
+                  {lastEvent.b.members.map((m) => (
+                    <MemberBadge key={m} id={m} colorIdx={animalCluster[m]} />
+                  ))}
                   — distance{" "}
                   <span className="font-mono text-ink">{lastEvent.distance.toFixed(2)}</span>
                 </div>
@@ -508,17 +504,13 @@ export const ClusteringSimulation = () => {
                   </span>
                   <span className="mx-2">·</span>
                   Séparation : d'un côté{" "}
-                  <span className="text-ink">
-                    {lastEvent.a.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
-                      .join(" ")}
-                  </span>
+                  {lastEvent.a.members.map((m) => (
+                    <MemberBadge key={m} id={m} colorIdx={animalCluster[m]} />
+                  ))}
                   , de l'autre{" "}
-                  <span className="text-ink">
-                    {lastEvent.b.members
-                      .map((m) => PEOPLE.find((p) => p.id === m)!.initial)
-                      .join(" ")}
-                  </span>
+                  {lastEvent.b.members.map((m) => (
+                    <MemberBadge key={m} id={m} colorIdx={animalCluster[m]} />
+                  ))}
                 </div>
               )}
             </div>
