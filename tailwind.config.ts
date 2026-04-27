@@ -3,6 +3,10 @@ import type { Config } from "tailwindcss";
 export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  safelist: [
+    "fill-cluster-a", "fill-cluster-b", "fill-cluster-c", "fill-cluster-d", "fill-highlight", "fill-ink-soft", "fill-ink",
+    "stroke-cluster-a", "stroke-cluster-b", "stroke-cluster-c", "stroke-cluster-d", "stroke-highlight",
+  ],
   prefix: "",
   theme: {
     container: {
