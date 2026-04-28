@@ -26,7 +26,7 @@ export const SceneDendrogram = () => {
   const clusters = clustersAtCut(cutY);
 
   return (
-    <div className="min-h-[70vh]">
+    <div className="min-h-screen">
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary mb-6 scene-enter">
           <GitBranch className="w-3.5 h-3.5 text-ink-soft" strokeWidth={1.5} />
@@ -41,7 +41,7 @@ export const SceneDendrogram = () => {
       </div>
 
       <div className="bg-card rounded-3xl shadow-elegant p-8 md:p-12 border border-line scene-enter scene-enter-delay-3">
-        <svg viewBox="0 0 100 100" className="w-full h-[420px]" preserveAspectRatio="none">
+        <svg viewBox="0 0 100 100" className="w-full h-[480px]" preserveAspectRatio="none">
           {/* Branches */}
           <g stroke="hsl(var(--ink))" strokeWidth="0.4" fill="none">
             {/* A-B merge at 15 */}
